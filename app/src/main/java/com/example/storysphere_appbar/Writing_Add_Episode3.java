@@ -1,33 +1,31 @@
 package com.example.storysphere_appbar;
 
-
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-
-import androidx.appcompat.widget.Toolbar;  // เพิ่ม import
-
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.example.storysphere_appbar.Episode;
-
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
 
 public class Writing_Add_Episode3 extends AppCompatActivity {
 
@@ -37,9 +35,25 @@ public class Writing_Add_Episode3 extends AppCompatActivity {
     private TextView bookTitle, bookTagline;
     private DBHelper dbHelper;
 
-    // ✅ เพิ่ม: สำหรับลิสต์ตอน
     private RecyclerView recyclerView;
     private EpisodeAdapter episodeAdapter;
+
+    // ปก (ImageView อยู่ใน include item_story มี id = imageView)
+    private ImageView cover;
+
+    // === รับบรอดแคสต์จากหน้าขวา ให้รีเฟรชสถิติแบบเรียลไทม์ ===
+    private final BroadcastReceiver writingChangeReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            if (!ReadingMainActivity.ACTION_WRITING_CHANGED.equals(intent.getAction())) return;
+
+            int changedId = intent.getIntExtra(ReadingMainActivity.EXTRA_WRITING_ID, -1);
+            if (changedId == writingId) {
+                // รีเฟรชตัวเลข bookmark/heart/view ให้ทันที
+                setupSocialBar(writingId);
+            }
+        }
+    };
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -50,78 +64,76 @@ public class Writing_Add_Episode3 extends AppCompatActivity {
 
         new DBHelper(this).ensureEpisodesTable();
 
-        // ✅ Setup Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // เปิดปุ่ม back
-        }
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        // ✅ ต้องผูกกับ field ของคลาส
-        bookTitle = findViewById(R.id.bookTitle);
+        bookTitle   = findViewById(R.id.bookTitle);
         bookTagline = findViewById(R.id.bookTagline);
-        dbHelper = new DBHelper(this);
+        // ❗️ปกที่ถูกต้องในการ์ดคือ R.id.imageView (ไม่ใช่ imgHome)
+        cover       = findViewById(R.id.imageView);
 
-        // เพิ่มบรรทัดนี้หลังจากสร้าง dbHelper
+        dbHelper = new DBHelper(this);
         dbHelper.ensureEpisodesTable();
 
-        // ✅ เก็บค่า writing_id
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("writing_id")) {
             writingId = intent.getIntExtra("writing_id", -1);
-            // Toast.makeText(this, "writingId=" + writingId, Toast.LENGTH_SHORT).show();
         }
 
-// ✅ ปุ่ม Add new episode -> ไปหน้า AddNovelActivity (โหมด create)
         findViewById(R.id.btnAddEpisode).setOnClickListener(v -> {
             Intent add = new Intent(this, AddNovelActivity.class);
             add.putExtra("mode", "create");
-            add.putExtra("writing_id", writingId);   // <- ต้องไม่เป็น -1
+            add.putExtra("writing_id", writingId);
             startActivityForResult(add, REQ_ADD_EDIT_EPISODE);
         });
 
-// ✅ ตั้งค่า RecyclerView (รายการตอน)
         recyclerView = findViewById(R.id.recyclerViewEpisodes);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-// EpisodeAdapter ต้องมี constructor ที่รับ (List<Episode>, OnEditClick)
         episodeAdapter = new EpisodeAdapter(new ArrayList<>(), this::onEditEpisodeClick);
         recyclerView.setAdapter(episodeAdapter);
 
-
-        // ✅ เรียกหน้า edit
         bookTitle.setOnClickListener(v -> {
             Intent editIntent = new Intent(Writing_Add_Episode3.this, activity_writnig_edit_writting.class);
             editIntent.putExtra("writing_id", writingId);
             startActivityForResult(editIntent, 1);
         });
 
-        // ไปหน้า DeleteWritingActivity
         TextView deleteButton = findViewById(R.id.textView4);
         deleteButton.setOnClickListener(v -> {
             Intent it = new Intent(Writing_Add_Episode3.this, DeleteWritingActivity.class);
-            it.putExtra("writing_id", writingId);   // ส่ง id ของเรื่องไปใช้โหลด/ลบ
+            it.putExtra("writing_id", writingId);
             startActivity(it);
         });
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadWritingData(); // โหลดข้อมูลล่าสุด
+        // ลงทะเบียนฟังการเปลี่ยนแปลงจากหน้าอ่าน
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                writingChangeReceiver,
+                new IntentFilter(ReadingMainActivity.ACTION_WRITING_CHANGED)
+        );
+
+        loadWritingData();               // ชื่อ/คำโปรย/ปก/แท็ก
+        setupSocialBar(writingId);       // สถิติ + คลิกได้
         dbHelper.backfillEpisodeNumbersIfNeeded();
-        loadEpisodes();   // ✅ โหลดรายการตอนทุกครั้งที่กลับเข้าหน้านี้
+        loadEpisodes();
     }
 
-    // ✅ โหลดรายการตอนจาก DB มาใส่ RecyclerView
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // ยกเลิกเพื่อกัน memory leak
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(writingChangeReceiver);
+    }
+
     private void loadEpisodes() {
         List<Episode> list = dbHelper.getEpisodesByWritingId(writingId);
-        if (episodeAdapter != null) {
-            episodeAdapter.submit(list); // ให้ adapter มีเมธอด submit(list) เพื่อ notifyDataSetChanged ภายใน
-        }
+        if (episodeAdapter != null) episodeAdapter.submit(list);
     }
 
-    // ✅ คลิกไอคอนดินสอ -> ไปแก้ตอนใน AddNovelActivity (โหมด edit)
     private void onEditEpisodeClick(Episode ep) {
         Intent edit = new Intent(this, AddNovelActivity.class);
         edit.putExtra("mode", "edit");
@@ -129,68 +141,133 @@ public class Writing_Add_Episode3 extends AppCompatActivity {
         startActivityForResult(edit, REQ_ADD_EDIT_EPISODE);
     }
 
-    // ✅ โหลดข้อมูล title, tagline จาก SQLite
+    // โหลด title, tagline, image, tag จาก DB (อัปเดตการ์ด)
     private void loadWritingData() {
         Cursor cursor = dbHelper.getWritingById(writingId);
         if (cursor != null && cursor.moveToFirst()) {
-            String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
-            String tagline = cursor.getString(cursor.getColumnIndexOrThrow("tagline"));
-            String tagString = cursor.getString(cursor.getColumnIndexOrThrow("tag")); // ✅ โหลดแท็กจาก DB
+            String title     = cursor.getString(cursor.getColumnIndexOrThrow("title"));
+            String tagline   = cursor.getString(cursor.getColumnIndexOrThrow("tagline"));
+            String tagString = cursor.getString(cursor.getColumnIndexOrThrow("tag"));
+            int idxImg       = cursor.getColumnIndex("image_path");
+            String imagePath = (idxImg >= 0 ? cursor.getString(idxImg) : null);
 
+            // ปก
+            if (cover != null) {
+                try {
+                    if (imagePath != null && !imagePath.trim().isEmpty()) {
+                        if (imagePath.startsWith("content://")) {
+                            cover.setImageURI(Uri.parse(imagePath));
+                        } else {
+                            Bitmap bmp = BitmapFactory.decodeFile(imagePath);
+                            if (bmp != null) {
+                                cover.setImageBitmap(bmp);
+                            } else {
+                                cover.setImageResource(R.drawable.ic_launcher_foreground);
+                            }
+                        }
+                    } else {
+                        cover.setImageResource(R.drawable.ic_launcher_foreground);
+                    }
+                } catch (Exception e) {
+                    cover.setImageResource(R.drawable.ic_launcher_foreground);
+                }
+            }
+
+            // ข้อความ
             bookTitle.setText(title);
             bookTagline.setText(tagline);
 
-            // ✅ แปลงเป็น List แล้วส่งไป showTags
+            // แท็ก
             if (tagString != null && !tagString.trim().isEmpty()) {
                 List<String> tagList = Arrays.asList(tagString.split(","));
                 showTags(tagList);
             } else {
-                showTags(new ArrayList<>()); // ถ้าไม่มีแท็ก เคลียร์คอนเทนเนอร์
+                showTags(new ArrayList<>());
             }
 
             cursor.close();
         }
     }
 
-    // ✅ โหลดใหม่หลังจากกลับจากหน้าแก้ไข
+    // ทำให้การ์ดฝั่งซ้าย “ขึ้นเรียลไทม์” เหมือนฝั่งขวา
+    private void setupSocialBar(int writingId) {
+        ImageView ivBookmark = findViewById(R.id.ivBookmark);
+        TextView  tvBookmark = findViewById(R.id.tvBookmark);
+        ImageView ivHeart    = findViewById(R.id.ivHeart);
+        TextView  tvHeart    = findViewById(R.id.tvHeart);
+        TextView  tvEye      = findViewById(R.id.tvEye);
+
+        final String logged = dbHelper.getLoggedInUserEmail();
+        final String userEmail = (logged == null || logged.trim().isEmpty()) ? "guest" : logged.trim();
+
+        // Bookmark
+        int bCount = Math.max(0, dbHelper.countBookmarks(writingId));
+        if (tvBookmark != null) tvBookmark.setText(String.valueOf(bCount));
+        boolean isBookmarked = dbHelper.isBookmarked(userEmail, writingId);
+        if (ivBookmark != null) {
+            ivBookmark.setImageResource(isBookmarked ? R.drawable.ic_bookmark_filled
+                    : R.drawable.ic_bookmark_outline);
+            ivBookmark.setOnClickListener(v -> {
+                boolean now = dbHelper.isBookmarked(userEmail, writingId);
+                boolean ok  = dbHelper.setBookmark(userEmail, writingId, !now);
+                if (ok) {
+                    int c = Math.max(0, dbHelper.countBookmarks(writingId));
+                    if (tvBookmark != null) tvBookmark.setText(String.valueOf(c));
+                    ivBookmark.setImageResource(!now ? R.drawable.ic_bookmark_filled
+                            : R.drawable.ic_bookmark_outline);
+                }
+            });
+        }
+
+        // Like
+        if (ivHeart != null && tvHeart != null) {
+            int likes = Math.max(0, dbHelper.getLikes(writingId));
+            tvHeart.setText(String.valueOf(likes));
+            ivHeart.setImageResource(R.drawable.heart_svgrepo_com);
+            ivHeart.setOnClickListener(v -> {
+                int newLikes = Math.max(0, dbHelper.addLikeOnce(writingId));
+                tvHeart.setText(String.valueOf(newLikes));
+                ivHeart.setImageResource(R.drawable.ic_heart_filled);
+            });
+        }
+
+        // Views
+        if (tvEye != null) {
+            tvEye.setText(String.valueOf(Math.max(0, dbHelper.getViews(writingId))));
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1 && resultCode == RESULT_OK) {
             loadWritingData();
+            setupSocialBar(writingId);
         }
         if (requestCode == REQ_ADD_EDIT_EPISODE && resultCode == RESULT_OK) {
-            loadEpisodes();   // ✅ เซฟ/แก้ไขตอนเสร็จ รีโหลดลิสต์
+            loadEpisodes();
+            setupSocialBar(writingId);
         }
     }
 
+    @Override
     public boolean onSupportNavigateUp() {
         Intent intent = new Intent(this, activity_writing.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); // ✅ กัน Stack ซ้อน
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
-        finish(); // ปิดหน้านี้
+        finish();
         return true;
     }
 
     private void showTags(List<String> tags) {
         LinearLayout tagContainer = findViewById(R.id.tagContainer);
-        tagContainer.removeAllViews(); // ล้างของเก่าออก
-
+        tagContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-
         for (String tag : tags) {
-            // Inflate layout ของแท็ก
             View tagView = inflater.inflate(R.layout.item_tag, tagContainer, false);
-
-            // หา TextView และตั้งค่า
             TextView tvTagName = tagView.findViewById(R.id.tagName);
             tvTagName.setText(tag);
-
-            // เพิ่มเข้าไปใน container
             tagContainer.addView(tagView);
         }
     }
-
-
-
 }

@@ -12,5 +12,7 @@
     <color name="dark_gray">#666666</color>
     <color name="light_gray">#DDDDDD</color>
     <color name="greyText1">#9AA0A6</color>
+    <color name="purpleAdmin">#66426F</color>
+    <color name="background">#F6F6F6</color>
     <color name="purple1_10">#1A7C4DFF</color> <!-- ม่วงโปร่ง 10% สำหรับชิป -->
 </resources>

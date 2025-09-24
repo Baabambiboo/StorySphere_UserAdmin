@@ -31,8 +31,7 @@ public class UserActivity extends AppCompatActivity {
                 return true;
 
             } else if (id == R.id.nav_library) {
-                // ถ้าไฟล์นี้คือ LibraryActivity เอง ก็แค่ return true;
-                // ถ้าไม่ใช่:
+
                 startActivity(new Intent(this, LibraryHistoryActivity.class));
                 overridePendingTransition(0,0);
                 finish();

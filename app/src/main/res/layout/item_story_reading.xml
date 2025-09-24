@@ -1,4 +1,4 @@
-<!-- res/layout/item_story.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -14,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- ปกนิยาย -->
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="150dp"
@@ -21,8 +22,10 @@
             android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:srcCompat="@tools:sample/avatars" />
+            tools:srcCompat="@tools:sample/avatars"
+            android:contentDescription="@string/app_name" />
 
+        <!-- ชื่อเรื่อง -->
         <TextView
             android:id="@+id/textTitle"
             android:layout_width="0dp"
@@ -35,73 +38,103 @@
             app:layout_constraintStart_toEndOf="@id/imageView"
             app:layout_constraintTop_toTopOf="@id/imageView" />
 
+        <!-- คำโปรย -->
+
+        <!-- ชื่อผู้เขียน (ขึ้นด้านขวา) -->
+
         <TextView
             android:id="@+id/textBlurb"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="36dp"
+            android:ellipsize="end"
+            android:maxLines="3"
             android:text="blurb"
             android:textSize="16sp"
-            android:maxLines="3"
-            android:ellipsize="end"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@id/imageView"
             app:layout_constraintTop_toBottomOf="@id/textTitle" />
 
 
-        <!-- สถิติเป็นกลุ่มแนวนอน -->
+        <!-- แถวสถิติ -->
+        <TextView
+            android:id="@+id/tvAuthorRight"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Author"
+            android:textColor="@color/purple1"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@id/imageView"
+            app:layout_constraintTop_toBottomOf="@id/textTitle" />
+
         <LinearLayout
             android:id="@+id/statRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginStart="0dp"
             android:layout_marginTop="15dp"
+            android:gravity="center_vertical"
             app:layout_constraintStart_toStartOf="@id/textBlurb"
             app:layout_constraintTop_toBottomOf="@id/textBlurb">
 
+            <!-- Bookmark -->
             <ImageView
+                android:id="@+id/ivBookmark"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/bookmark_svgrepo_com" />
+                app:srcCompat="@drawable/ic_bookmark_outline"
+                android:contentDescription="@string/bookmark" />
 
             <TextView
-                android:id="@+id/textBookmarkView"
+                android:id="@+id/tvBookmark"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="1"
+                android:text="0"
                 android:textColor="@color/purple1"
                 android:textSize="13sp" />
 
+            <!-- Heart -->
             <ImageView
+                android:id="@+id/ivHeart"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:layout_marginStart="8dp"
-                app:srcCompat="@drawable/heart_svgrepo_com" />
+                android:layout_marginStart="12dp"
+                app:srcCompat="@drawable/heart_svgrepo_com"
+                android:contentDescription="@string/like" />
 
             <TextView
-                android:id="@+id/textHeartView"
+                android:id="@+id/tvHeart"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="2"
+                android:text="0"
                 android:textColor="@color/purple1"
                 android:textSize="13sp" />
 
+            <!-- Eye -->
             <ImageView
+                android:id="@+id/ivEye"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:layout_marginStart="8dp"
-                app:srcCompat="@drawable/eye_svgrepo_com" />
+                android:layout_marginStart="12dp"
+                app:srcCompat="@drawable/eye_svgrepo_com"
+                android:contentDescription="@string/views" />
 
             <TextView
-                android:id="@+id/textViewNumber"
+                android:id="@+id/tvEye"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="3"
+                android:text="0"
                 android:textColor="@color/purple1"
                 android:textSize="13sp" />
         </LinearLayout>

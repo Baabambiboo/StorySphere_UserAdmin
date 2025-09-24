@@ -115,8 +115,8 @@
         android:layout_height="95dp"
         android:layout_gravity="bottom"
         android:background="@color/white"
-        app:menu="@menu/bottom_nav_menu"
         app:itemIconTint="@color/purple1"
         app:itemTextColor="@color/purple1"
-        app:labelVisibilityMode="labeled"/>
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

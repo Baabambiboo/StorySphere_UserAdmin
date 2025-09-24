@@ -10,12 +10,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import jp.wasabeef.richeditor.RichEditor;
-
-import android.text.Html;
-import android.os.Build;
 
 public class AddNovelActivity extends AppCompatActivity {
 
@@ -44,7 +40,7 @@ public class AddNovelActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false); // ซ่อน "Home"
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // ซ่อน title
         }
 
         dbHelper = new DBHelper(this);
@@ -78,12 +74,12 @@ public class AddNovelActivity extends AppCompatActivity {
         }
 
         // ปุ่มจัดรูปแบบ
-        btnBold       = findViewById(R.id.action_bold);
-        btnItalic     = findViewById(R.id.action_italic);
-        btnUnderline  = findViewById(R.id.action_underline);
-        btnAlignLeft  = findViewById(R.id.action_align_left);
-        btnAlignCenter= findViewById(R.id.action_align_center);
-        btnAlignRight = findViewById(R.id.action_align_right);
+        btnBold        = findViewById(R.id.action_bold);
+        btnItalic      = findViewById(R.id.action_italic);
+        btnUnderline   = findViewById(R.id.action_underline);
+        btnAlignLeft   = findViewById(R.id.action_align_left);
+        btnAlignCenter = findViewById(R.id.action_align_center);
+        btnAlignRight  = findViewById(R.id.action_align_right);
 
         editor.setEditorHeight(300);
         editor.setEditorFontSize(16);
@@ -118,7 +114,6 @@ public class AddNovelActivity extends AppCompatActivity {
                 return;
             }
 
-            // ✅ บันทึก “html” ลงฐานข้อมูล (ให้แน่ใจว่า method เหล่านี้ map ไปคอลัมน์ content_html)
             boolean ok;
             if ("edit".equals(mode)) {
                 if (episodeId == -1) {
@@ -143,27 +138,6 @@ public class AddNovelActivity extends AppCompatActivity {
             }
         });
     }
-
-    /**
-     * เช็คอย่างเร็ว ๆ ว่า TABLE_WRITINGS มีแถว id ที่กำลังจะผูกอยู่ไหม
-     * (ไม่เปลี่ยน DBHelper เพื่อให้ไฟล์นี้แก้ได้จบในที่เดียว)
-     */
-    private boolean writingExists(int id) {
-        Cursor c = null;
-        try {
-            c = dbHelper.getReadableDatabase().rawQuery(
-                    "SELECT 1 FROM " + DBHelper.TABLE_WRITINGS + " WHERE id=? LIMIT 1",
-                    new String[]{ String.valueOf(id) }
-            );
-            return c.moveToFirst();
-        } catch (Exception e) {
-            Log.e("AddNovelActivity", "writingExists check failed", e);
-            return false;
-        } finally {
-            if (c != null) c.close();
-        }
-    }
-
 
     // กู้ค่า writingId กรณีไม่ได้ส่งมา: เอา id ล่าสุดจาก TABLE_WRITINGS
     private int resolveWritingIdFallback() {

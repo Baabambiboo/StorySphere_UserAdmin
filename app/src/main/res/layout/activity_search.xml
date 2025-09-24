@@ -32,40 +32,15 @@
                 app:contentInsetEndWithActions="0dp">
 
                 <include
-                    layout="@layout/menu_action_search_pill"
                     android:id="@+id/searchPill"
+                    layout="@layout/menu_action_search_pill2"
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginEnd="16dp"/>
             </androidx.appcompat.widget.Toolbar>
+
             <!-- ฟิลเตอร์แบบ CheckBox -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Filter by categories"
-                android:textStyle="bold"
-                android:textColor="@color/darkpurple"
-                android:textSize="14sp"
-                android:layout_marginTop="16dp"/>
-
-            <GridLayout
-                android:id="@+id/checkCategories"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="3"
-                android:orientation="horizontal"
-                android:alignmentMode="alignMargins"
-                android:useDefaultMargins="true"
-                android:layout_marginTop="8dp">
-
-                <CheckBox android:text="Romance" />
-                <CheckBox android:text="Fantasy" />
-                <CheckBox android:text="Drama" />
-                <CheckBox android:text="Sci-fi" />
-                <CheckBox android:text="Comedy" />
-                <CheckBox android:text="Mystery" />
-            </GridLayout>
 
             <!-- ฟิลเตอร์แบบ Material Chip -->
             <TextView
@@ -88,31 +63,43 @@
 
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Romance"
                     android:checkable="true"/>
 
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Fantasy"
                     android:checkable="true"/>
 
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Drama"
                     android:checkable="true"/>
 
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Sci-fi"
                     android:checkable="true"/>
 
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Comedy"
                     android:checkable="true"/>
 
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Mystery"
                     android:checkable="true"/>
             </com.google.android.material.chip.ChipGroup>

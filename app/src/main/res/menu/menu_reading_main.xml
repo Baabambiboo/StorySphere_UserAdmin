@@ -5,5 +5,5 @@
         android:id="@+id/action_report"
         android:title="Report"
         android:icon="@drawable/overflow_menu_vertical_svgrepo_com"
-        app:showAsAction="always"/>
+        app:showAsAction="never"/>
 </menu>

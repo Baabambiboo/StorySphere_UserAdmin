@@ -10,7 +10,6 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.text.HtmlCompat;
 import androidx.core.view.GravityCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -21,7 +20,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.util.List;
 
-/** หน้าอ่านตอน: แสดงเนื้อหา + Drawer ตอน + ปุ่ม Back/Next + BottomSheet คอมเมนต์ */
 public class activity_episode extends AppCompatActivity {
 
     private DBHelper db;
@@ -36,7 +34,7 @@ public class activity_episode extends AppCompatActivity {
 
     private int writingId;
     private int currentEpisodeId;
-    private List<Episode> episodeList;
+    private List<Episode> episodeList;   // ✅ ใช้ Episode ภายนอก
     private int position = 0;
 
     @Override
@@ -71,16 +69,12 @@ public class activity_episode extends AppCompatActivity {
 
         // Drawer toggle
         View actionEpisodes = findViewById(R.id.actionEpisodes);
-        if (actionEpisodes != null) {
-            actionEpisodes.setOnClickListener(v -> drawer.openDrawer(GravityCompat.START));
-        }
+        if (actionEpisodes != null) actionEpisodes.setOnClickListener(v -> drawer.openDrawer(GravityCompat.START));
         View btnClose = findViewById(R.id.btnCloseDrawer);
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> drawer.closeDrawer(GravityCompat.START));
-        }
+        if (btnClose != null) btnClose.setOnClickListener(v -> drawer.closeDrawer(GravityCompat.START));
 
         // โหลดตอนทั้งหมดของเรื่อง
-        episodeList = db.getEpisodesByWritingId(writingId);
+        episodeList = db.getEpisodesByWritingId(writingId); // ✅ คืน List<Episode>
 
         // รายการตอนใน Drawer
         rvEpisodes.setLayoutManager(new LinearLayoutManager(this));
@@ -113,17 +107,12 @@ public class activity_episode extends AppCompatActivity {
         if (sheet == null) return;
 
         commentsSheet = BottomSheetBehavior.from(sheet);
-
-        // <<< เพิ่มตรงนี้ >>>
         sheet.setVisibility(View.VISIBLE);
-
         commentsSheet.setHideable(true);
         commentsSheet.setState(BottomSheetBehavior.STATE_HIDDEN);
 
         rvComments = sheet.findViewById(R.id.rvComments);
-        if (rvComments != null) {
-            rvComments.setLayoutManager(new LinearLayoutManager(this));
-        }
+        if (rvComments != null) rvComments.setLayoutManager(new LinearLayoutManager(this));
 
         View actionComment = findViewById(R.id.actionComment);
         if (actionComment != null) {
@@ -136,9 +125,9 @@ public class activity_episode extends AppCompatActivity {
         }
     }
 
-    /** แสดงตอนตาม id */
+    /** แสดงตอนตาม id + บันทึกประวัติอ่าน (History) */
     private void showEpisode(int episodeId) {
-        Episode ep = db.getEpisodeById(episodeId);
+        Episode ep = db.getEpisodeById(episodeId); // ✅ ได้ Episode ภายนอก
         if (ep == null) return;
 
         currentEpisodeId = ep.episodeId;
@@ -148,26 +137,13 @@ public class activity_episode extends AppCompatActivity {
         if (tvEpisodeTitle  != null) tvEpisodeTitle.setText(ep.title);
         if (tvEpisodeHeading!= null) tvEpisodeHeading.setText(ep.title);
 
-        // ✅ ใช้ TextView เหมือนเดิม แต่แปลง HTML ให้รองรับจัดกลาง/ขวา
+        // แปลง HTML ให้ TextView
         String html = ep.contentHtml == null ? "" : ep.contentHtml;
         html = normalizeHtmlForTextView(html);
+        Spanned sp = androidx.core.text.HtmlCompat.fromHtml(html, androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY);
 
-        Spanned sp = androidx.core.text.HtmlCompat.fromHtml(
-                html,
-                androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY
-        );
         if (tvEpisodeContent != null) {
             tvEpisodeContent.setText(sp);
-
-            // ❌ เอาออก/คอมเมนต์บรรทัดสองบรรทัดนี้ (ตัวการยืดคำ)
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            //     tvEpisodeContent.setJustificationMode(Layout.JUSTIFICATION_MODE_INTER_WORD);
-            // }
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            //     tvEpisodeContent.setBreakStrategy(Layout.BREAK_STRATEGY_BALANCED);
-            // }
-
-            // ✅ ถ้าจะกำหนดชัด ๆ ให้ไม่ยืดคำและตัดบรรทัดแบบง่าย:
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 tvEpisodeContent.setJustificationMode(Layout.JUSTIFICATION_MODE_NONE);
             }
@@ -176,8 +152,14 @@ public class activity_episode extends AppCompatActivity {
             }
         }
 
+        // เลื่อนกลับบนสุด
         NestedScrollView ns = findViewById(R.id.scrollContent);
         if (ns != null) ns.smoothScrollTo(0, 0);
+
+        // ✅ บันทึก History ทุกครั้งที่เปิดตอน (ลายเซ็นใหม่: email, writingId, episodeId)
+        String email = db.getLoggedInUserEmail();
+        if (email == null || email.trim().isEmpty()) email = "guest";
+        db.addHistory(email, writingId, ep.episodeId);
     }
 
     /** ตั้งค่าตำแหน่งตอนใหม่ + อัปเดตหน้าจอ + ปุ่มขอบ */
@@ -246,19 +228,12 @@ public class activity_episode extends AppCompatActivity {
     // แปลง <p style="text-align:center/right">...</p> ให้เป็นแท็กที่ TextView รองรับ
     private String normalizeHtmlForTextView(String html) {
         if (html == null) return "";
-
-        // จัดกลาง
         html = html.replaceAll("(?is)<p[^>]*text-align\\s*:\\s*center[^>]*>(.*?)</p>", "<center>$1</center>");
         html = html.replaceAll("(?is)<div[^>]*text-align\\s*:\\s*center[^>]*>(.*?)</div>", "<center>$1</center>");
-
-        // จัดขวา
         html = html.replaceAll("(?is)<p[^>]*text-align\\s*:\\s*right[^>]*>(.*?)</p>", "<div align='right'>$1</div>");
         html = html.replaceAll("(?is)<div[^>]*text-align\\s*:\\s*right[^>]*>(.*?)</div>", "<div align='right'>$1</div>");
-
-        // (ถ้าตัวแก้ไขปล่อย <span style="text-align:center"> ก็รองรับเพิ่มตามนี้)
         html = html.replaceAll("(?is)<span[^>]*text-align\\s*:\\s*center[^>]*>(.*?)</span>", "<center>$1</center>");
         html = html.replaceAll("(?is)<span[^>]*text-align\\s*:\\s*right[^>]*>(.*?)</span>", "<div align='right'>$1</div>");
-
         return html;
     }
 }

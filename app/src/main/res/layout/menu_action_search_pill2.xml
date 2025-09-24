@@ -31,5 +31,6 @@
         android:paddingHorizontal="8dp"
         android:textSize="14sp"
         android:imeOptions="actionSearch"
-        android:inputType="text" />
+        android:inputType="text"
+   />
 </LinearLayout>

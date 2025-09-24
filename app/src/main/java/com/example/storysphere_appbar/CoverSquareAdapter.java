@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-/** อแดปเตอร์โชว์ปก 96x96 พร้อมชื่อเรื่อง (ใช้กับ item_cover_square.xml) */
+
 public class CoverSquareAdapter extends RecyclerView.Adapter<CoverSquareAdapter.VH> {
 
     public interface OnItemClick {
