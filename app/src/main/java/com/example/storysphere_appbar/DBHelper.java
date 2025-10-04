@@ -25,8 +25,14 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_FOLLOWS         = "follows";
     public static final String TABLE_LIKES_LOG = "user_likes";
     public static final String TABLE_COMMENTS  = "comments";
+    public static final String TABLE_BANNERS = "banners";
+
 
     public static final String COL_LIKES = "likes_count";
+
+    public static final String COL_PROFILE_URI = "profile_image_uri";
+
+
 
 
     private static final int DATABASE_VERSION = 23;
@@ -108,6 +114,26 @@ public class DBHelper extends SQLiteOpenHelper {
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_c_user_time ON " + TABLE_COMMENTS + "(user_email, created_at DESC)");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_c_writing ON " + TABLE_COMMENTS + "(writing_id)");
 
+            db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS " + TABLE_USERS + " (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "email TEXT UNIQUE," +
+                            "username TEXT," +
+                            "password TEXT," +
+                            "role TEXT," +
+                            COL_PROFILE_URI + " TEXT" +
+                            ");"
+            );
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_BANNERS + " (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "image_path TEXT NOT NULL," +
+                    "title TEXT," +
+                    "deeplink TEXT," +
+                    "is_active INTEGER NOT NULL DEFAULT 1," +
+                    "created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))" +
+                    ")");
+
             db.setTransactionSuccessful();
         } finally { db.endTransaction(); }
     }
@@ -140,6 +166,17 @@ public class DBHelper extends SQLiteOpenHelper {
             safeAddColumn(db, TABLE_WRITINGS, "author_email", "TEXT");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_writings_author_email ON " + TABLE_WRITINGS + "(author_email)");
         }
+        if (oldVersion < 24) {  // bump DATABASE_VERSION to 24
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_BANNERS + " (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "image_path TEXT NOT NULL," +
+                    "title TEXT," +
+                    "deeplink TEXT," +
+                    "is_active INTEGER NOT NULL DEFAULT 1," +
+                    "created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))" +
+                    ")");
+        }
+
 
         // safety net
         ensureEpisodesTable(db);
@@ -1237,6 +1274,17 @@ public class DBHelper extends SQLiteOpenHelper {
         return idx >= 0 ? c.getString(idx) : null;
     }
 
+    /** นับจำนวนตอนทั้งหมดของนิยาย */
+    public int countEpisodesByWritingId(int writingId) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery(
+                "SELECT COUNT(*) FROM " + TABLE_EPISODES + " WHERE writing_id=?",
+                new String[]{ String.valueOf(writingId) })) {
+            return c.moveToFirst() ? c.getInt(0) : 0;
+        }
+    }
+
+
     // ======================== FEED ========================
     public static class EpisodeFeed {
         public int episodeId, writingId, episodeNo;
@@ -1445,6 +1493,86 @@ public class DBHelper extends SQLiteOpenHelper {
             }
         }
         return out;
+    }
+    // ดึงรายชื่อ username ที่ไม่ว่าง (unique + เรียงชื่อ)
+    public List<String> getAllUsernamesNonEmpty() {
+        ArrayList<String> list = new ArrayList<>();
+        try (Cursor c = getReadableDatabase().rawQuery(
+                "SELECT DISTINCT username FROM " + TABLE_USERS + " " +
+                        "WHERE username IS NOT NULL AND TRIM(username) <> '' " +
+                        "ORDER BY LOWER(username) ASC", null)) {
+            while (c.moveToNext()) list.add(c.getString(0));
+        }
+        return list;
+    }
+
+    /** ดึงหมวดหมู่หนังสือ (category) ที่ไม่ว่าง/ไม่เป็น null แบบไม่ซ้ำ และเรียง A→Z */
+    public java.util.List<String> getAllCategoriesNonEmpty() {
+        java.util.ArrayList<String> list = new java.util.ArrayList<>();
+        try (Cursor c = getReadableDatabase().rawQuery(
+                "SELECT DISTINCT TRIM(category) AS cat " +
+                        "FROM " + TABLE_WRITINGS + " " +
+                        "WHERE category IS NOT NULL AND TRIM(category) <> '' " +
+                        "ORDER BY LOWER(cat) ASC", null)) {
+            while (c.moveToNext()) {
+                list.add(c.getString(0));
+            }
+        }
+        return list;
+    }
+    public long insertBanner(String imagePath, @Nullable String title, @Nullable String deeplink, boolean active){
+        ContentValues cv = new ContentValues();
+        cv.put("image_path", imagePath);
+        cv.put("title", title);
+        cv.put("deeplink", deeplink);
+        cv.put("is_active", active ? 1 : 0);
+        return getWritableDatabase().insert(TABLE_BANNERS, null, cv);
+    }
+
+    public List<Banner> getActiveBanners(){
+        ArrayList<Banner> list = new ArrayList<>();
+        try (Cursor c = getReadableDatabase().rawQuery(
+                "SELECT id, image_path, title, deeplink, is_active FROM " + TABLE_BANNERS +
+                        " WHERE is_active=1 ORDER BY id DESC", null)) {
+            while (c.moveToNext()){
+                Banner b = new Banner();
+                b.id = c.getInt(0);
+                b.imagePath = c.getString(1);
+                b.title = c.isNull(2) ? null : c.getString(2);
+                b.deeplink = c.isNull(3) ? null : c.getString(3);
+                b.active = c.getInt(4) == 1;
+                list.add(b);
+            }
+        }
+        return list;
+    }
+
+    public static class Banner {
+        public int id;
+        public String imagePath;   // URI string (content:// or file:// or https://)
+        public String title;       // optional
+        public String deeplink;    // optional (tap to open)
+        public boolean active;
+    }
+
+    public List<Banner> getAllBanners() {
+        List<Banner> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT * FROM banners WHERE active = 1", null);
+
+        if (c.moveToFirst()) {
+            do {
+                Banner b = new Banner();
+                b.id = c.getInt(c.getColumnIndexOrThrow("id"));
+                b.imagePath = c.getString(c.getColumnIndexOrThrow("image_path"));
+                b.title = c.getString(c.getColumnIndexOrThrow("title"));
+                b.deeplink = c.getString(c.getColumnIndexOrThrow("deeplink"));
+                b.active = c.getInt(c.getColumnIndexOrThrow("active")) == 1;
+                list.add(b);
+            } while (c.moveToNext());
+        }
+        c.close();
+        return list;
     }
 
 }

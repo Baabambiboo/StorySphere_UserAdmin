@@ -96,6 +96,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
+
+
                 <!-- placeholder ให้เห็นภาพตอนยังไม่ต่ออแดปเตอร์ -->
                 <ImageView
                     android:id="@+id/bannerPlaceholder"
@@ -108,6 +110,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     tools:visibility="visible"
                     android:visibility="gone"/>
+
 
                 <!-- จุดบอกหน้า -->
                 <LinearLayout

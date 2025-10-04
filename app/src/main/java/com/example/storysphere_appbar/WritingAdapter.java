@@ -23,6 +23,17 @@ public class WritingAdapter extends RecyclerView.Adapter<WritingAdapter.ViewHold
         this.context = context;
         this.items = items;
     }
+    public void replace(List<WritingItem> newItems) {
+        this.items.clear();
+        this.items.addAll(newItems);
+        notifyDataSetChanged();
+    }
+
+    // 🆕 เพิ่มเมธอด submit เพื่ออัปเดตลิสต์
+    public void submit(List<WritingItem> newItems) {
+        this.items = newItems;
+        notifyDataSetChanged();
+    }
 
     @NonNull
     @Override
@@ -36,25 +47,25 @@ public class WritingAdapter extends RecyclerView.Adapter<WritingAdapter.ViewHold
         WritingItem item = items.get(position);
 
         holder.textTitle.setText(item.getTitle());
-        holder.textDesc.setText(item.getTagline());  // ใช้ tagline แทนรายละเอียด
+        holder.textDesc.setText(item.getTagline());
         holder.textAuthor.setText(item.getCategory() + " | " + item.getTag());
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, Writing_Add_Episode3.class);
-            intent.putExtra("writing_id", item.getId());  // ส่ง ID ไป
+            intent.putExtra("writing_id", item.getId());
             context.startActivity(intent);
         });
 
-        // โหลดภาพจาก Uri ที่เก็บไว้ ถ้าไม่มีใช้ภาพ default
         if (item.getImagePath() != null && !item.getImagePath().isEmpty()) {
             holder.imageView.setImageURI(Uri.parse(item.getImagePath()));
         } else {
-            holder.imageView.setImageResource(R.drawable.ic_human_background);        }
+            holder.imageView.setImageResource(R.drawable.ic_human_background);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return items == null ? 0 : items.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

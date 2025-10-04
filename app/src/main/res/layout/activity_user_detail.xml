@@ -65,40 +65,40 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollView2"
         android:layout_width="match_parent"
-        android:layout_height="920dp"
+        android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
+            <!-- โปรไฟล์การ์ด: ชิดซ้าย เต็มความกว้าง -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardProfile"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 app:cardCornerRadius="30dp"
                 app:cardElevation="6dp"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="170dp"
-                    tools:layout_editor_absoluteX="5dp"
-                    tools:layout_editor_absoluteY="0dp">
+                    android:layout_height="170dp">
 
+                    <!-- รูปโปรไฟล์ชิดซ้าย -->
                     <ImageView
                         android:id="@+id/img_User_Details"
                         android:layout_width="86dp"
                         android:layout_height="93dp"
+                        android:layout_marginStart="20dp"
                         android:layout_marginTop="20dp"
-                        android:layout_marginEnd="276dp"
-                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         tools:srcCompat="@tools:sample/avatars" />
 
+                    <!-- Display name ใต้รูป -->
                     <TextView
                         android:id="@+id/txtDTDisplayName"
                         android:layout_width="wrap_content"
@@ -109,105 +109,96 @@
                         android:paddingEnd="16dp"
                         android:paddingBottom="6dp"
                         android:text="Display Name"
-                        android:textAlignment="center"
                         android:textColor="@color/darkpurple"
                         android:textSize="16sp"
-                        app:layout_constraintEnd_toEndOf="@id/img_User_Details"
                         app:layout_constraintStart_toStartOf="@id/img_User_Details"
-                        app:layout_constraintTop_toBottomOf="@id/img_User_Details" />
+                        app:layout_constraintEnd_toEndOf="@id/img_User_Details"
+                        app:layout_constraintTop_toBottomOf="@id/img_User_Details"
+                        app:layout_goneMarginTop="8dp" />
+
+
+                    <!-- UserId + สถานะ -->
+                    <TextView
+                        android:id="@+id/txtUserId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ST01"
+                        android:textColor="@color/purpleAdmin"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="28dp"
+                        app:layout_constraintStart_toEndOf="@id/img_User_Details"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/txtStatusBook"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
                         android:text="Active"
                         android:textColor="@color/purpleAdmin"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.719"
-                        app:layout_constraintStart_toEndOf="@+id/txtUserId"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:layout_marginStart="12dp"
+                        app:layout_constraintBaseline_toBaselineOf="@id/txtUserId"
+                        app:layout_constraintStart_toEndOf="@id/txtUserId"
+                        app:layout_constraintEnd_toEndOf="parent" />
 
+                    <!-- User Name -->
                     <TextView
                         android:id="@+id/txtDTUserName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginTop="24dp"
                         android:text="User Name :"
                         android:textColor="@color/purpleAdmin"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.036"
-                        app:layout_constraintStart_toEndOf="@+id/img_User_Details"
-                        app:layout_constraintTop_toBottomOf="@+id/txtUserId" />
-
-                    <TextView
-                        android:id="@+id/txtUserId"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginTop="30dp"
-                        android:text="ST01"
-                        android:textColor="@color/purpleAdmin"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.028"
-                        app:layout_constraintStart_toEndOf="@+id/img_User_Details"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="12dp"
+                        app:layout_constraintStart_toEndOf="@id/img_User_Details"
+                        app:layout_constraintTop_toBottomOf="@id/txtUserId" />
 
                     <TextView
                         android:id="@+id/txtUserName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="3dp"
-                        android:layout_marginTop="72dp"
                         android:text="UserName"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.0"
-                        app:layout_constraintStart_toEndOf="@+id/txtDTUserName"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:layout_marginStart="6dp"
+                        app:layout_constraintStart_toEndOf="@id/txtDTUserName"
+                        app:layout_constraintBaseline_toBaselineOf="@id/txtDTUserName" />
 
+                    <!-- Email -->
                     <TextView
                         android:id="@+id/txtDTEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="25dp"
                         android:text="E-mail :"
                         android:textColor="@color/purpleAdmin"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.163"
-                        app:layout_constraintStart_toEndOf="@+id/img_User_Details"
-                        app:layout_constraintTop_toBottomOf="@+id/txtDTUserName" />
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        app:layout_constraintStart_toEndOf="@id/img_User_Details"
+                        app:layout_constraintTop_toBottomOf="@id/txtDTUserName" />
 
                     <TextView
                         android:id="@+id/txtEmailUser"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="3dp"
-                        android:layout_marginTop="25dp"
                         android:text="EMail"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.0"
-                        app:layout_constraintStart_toEndOf="@+id/txtDTEmail"
-                        app:layout_constraintTop_toBottomOf="@+id/txtUserName" />
+                        android:layout_marginStart="6dp"
+                        app:layout_constraintStart_toEndOf="@id/txtDTEmail"
+                        app:layout_constraintBaseline_toBaselineOf="@id/txtDTEmail" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- ปุ่ม Liked History -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardView"
                 android:layout_width="152dp"
                 android:layout_height="42dp"
                 android:layout_marginStart="31dp"
                 android:layout_marginTop="12dp"
-                android:layout_marginEnd="244dp"
                 app:cardCornerRadius="30dp"
                 app:cardElevation="6dp"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/cardProfile">
 
@@ -221,12 +212,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="15dp"
                         android:layout_marginTop="12dp"
-                        android:layout_marginEnd="62dp"
                         android:text="Liked History"
                         android:textColor="@color/purpleAdmin"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -235,27 +223,36 @@
                         android:layout_width="39dp"
                         android:layout_height="27dp"
                         android:layout_marginTop="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.0"
-                        app:layout_constraintStart_toEndOf="@+id/textView18"
+                        app:layout_constraintStart_toEndOf="@id/textView18"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_heart_filled" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- รายการ Like แบบ inline (เริ่มซ่อน) -->
+            <LinearLayout
+                android:id="@+id/likesSection"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="31dp"
+                android:layout_marginEnd="31dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cardView" />
+
+            <!-- ปุ่ม Comment History จะอยู่ใต้ likesSection -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardviewComment"
                 android:layout_width="165dp"
                 android:layout_height="42dp"
                 android:layout_marginStart="31dp"
                 android:layout_marginTop="24dp"
-                android:layout_marginEnd="244dp"
                 app:cardCornerRadius="30dp"
                 app:cardElevation="6dp"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/cardView" >
-
+                app:layout_constraintTop_toBottomOf="@+id/likesSection" >
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -267,12 +264,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="17dp"
                         android:layout_marginTop="12dp"
-                        android:layout_marginEnd="44dp"
                         android:text="Comment History"
                         android:textColor="@color/purpleAdmin"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.05"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -282,14 +276,24 @@
                         android:layout_height="22dp"
                         android:layout_marginStart="1dp"
                         android:layout_marginTop="8dp"
-                        android:layout_marginEnd="16dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.1"
-                        app:layout_constraintStart_toEndOf="@+id/textView20"
+                        app:layout_constraintStart_toEndOf="@id/textView20"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_comment" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- รายการ Comment แบบ inline (เริ่มซ่อน) -->
+            <LinearLayout
+                android:id="@+id/commentsSection"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="31dp"
+                android:layout_marginEnd="31dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/cardviewComment"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>

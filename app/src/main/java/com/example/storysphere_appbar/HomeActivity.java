@@ -2,10 +2,12 @@ package com.example.storysphere_appbar;
 
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,9 +19,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.chip.Chip;
+
+import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -30,12 +35,17 @@ public class HomeActivity extends AppCompatActivity {
     private RecyclerView rvTopChart;
     private TopChartRowAdapter topChartAdapter;
 
+    // ------- เพิ่มตัวแปร field สำหรับ Banner + DB -------
+    private ViewPager2 bannerPager;
+    private ImageView bannerPlaceholder;
+    private LinearLayout dots;
+    private DBHelper db;
+
     /** ฟังเหตุการณ์สถิติเปลี่ยน (like, view, bookmark) แล้วรีโหลด Top Chart บนหน้า Home */
     private final android.content.BroadcastReceiver writingChangedReceiver =
             new android.content.BroadcastReceiver() {
                 @Override
                 public void onReceive(android.content.Context context, Intent intent) {
-                    // ถูกเรียกเมื่อหน้า Home ยัง visible และมี broadcast เข้ามา
                     refreshTop3();
                 }
             };
@@ -44,6 +54,12 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        // ---------- init DB + Banner views (ประกาศครั้งเดียว) ----------
+        db = new DBHelper(this);
+        bannerPager       = findViewById(R.id.bannerPager);
+        bannerPlaceholder = findViewById(R.id.bannerPlaceholder);
+        dots              = findViewById(R.id.dots);
 
         // ===== Search pill =====
         EditText etSearch = findViewById(R.id.etSearch);
@@ -68,20 +84,14 @@ public class HomeActivity extends AppCompatActivity {
         // ===== Toolbar =====
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         // ===== Profile icon =====
         ivProfile = findViewById(R.id.ivProfile);
         ivProfile.setOnClickListener(v -> {
-            String email = getSharedPreferences("auth", MODE_PRIVATE)
-                    .getString("email", null);
-
+            String email = getSharedPreferences("auth", MODE_PRIVATE).getString("email", null);
             Intent i = new Intent(this, activity_profile.class);
-            if (email != null) {
-                i.putExtra("email", email);
-            }
+            if (email != null) i.putExtra("email", email);
             startActivity(i);
         });
 
@@ -90,26 +100,19 @@ public class HomeActivity extends AppCompatActivity {
         bottomNav.setSelectedItemId(R.id.nav_home);
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
-
-            if (id == R.id.nav_home) {
-                return true;
-            } else if (id == R.id.nav_library) {
+            if (id == R.id.nav_home) return true;
+            if (id == R.id.nav_library) {
                 startActivity(new Intent(this, LibraryHistoryActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (id == R.id.nav_writing) {
-                startActivity(new Intent(this, activity_writing.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (id == R.id.nav_activity) {
-                startActivity(new Intent(this, UserActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
+                overridePendingTransition(0, 0); finish(); return true;
             }
-
+            if (id == R.id.nav_writing) {
+                startActivity(new Intent(this, activity_writing.class));
+                overridePendingTransition(0, 0); finish(); return true;
+            }
+            if (id == R.id.nav_activity) {
+                startActivity(new Intent(this, UserActivity.class));
+                overridePendingTransition(0, 0); finish(); return true;
+            }
             return false;
         });
 
@@ -125,7 +128,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // ===== ตั้ง LayoutManager =====
         setHorizontalList(R.id.rvYouMayLike);
-        setVerticalList(R.id.rvTopChart); // Top Chart แนวตั้ง
+        setVerticalList(R.id.rvTopChart);
         setHorizontalList(R.id.rvRomance);
         setHorizontalList(R.id.rvDrama);
         setHorizontalList(R.id.rvComedy);
@@ -133,7 +136,7 @@ public class HomeActivity extends AppCompatActivity {
         setHorizontalList(R.id.rvScifi);
         setHorizontalList(R.id.rvMystery);
 
-        // === ปุ่ม '>' ของ Top Chart → ไปหน้า TopChartActivity ===
+        // ปุ่ม '>' ของ Top Chart
         View rowTop = findViewById(R.id.rowTopChart);
         if (rowTop != null) {
             View arrow = rowTop.findViewById(R.id.btnMore);
@@ -158,61 +161,51 @@ public class HomeActivity extends AppCompatActivity {
         if (chipMystery != null) chipMystery.setOnClickListener(v -> openCategory("Mystery"));
         if (chipScifi   != null) chipScifi.setOnClickListener(v   -> openCategory("Sci-fi"));
 
-        // ===== โหลดข้อมูลจาก DB =====
-        DBHelper db = new DBHelper(this);
-
+        // ===== โหลดข้อมูลรายการต่าง ๆ =====
         RecyclerView rvYouMayLike = findViewById(R.id.rvYouMayLike);
         rvYouMayLike.setAdapter(new CoverSquareAdapter(
-                db.getRecentWritings(12),
-                this::openWritingDetail
-        ));
+                db.getRecentWritings(12), this::openWritingDetail));
 
         rvTopChart = findViewById(R.id.rvTopChart);
         topChartAdapter = new TopChartRowAdapter(
-                db.getTopWritingsByLikes(3),   // บน Home โชว์ Top 3
-                this::openWritingDetail,
-                /* lockBookmarkTint = */ true   // ห้ามเปลี่ยนสี bookmark บนหน้า Home
-        );
+                db.getTopWritingsByLikes(3), this::openWritingDetail, true);
         rvTopChart.setAdapter(topChartAdapter);
 
         RecyclerView rvRomance = findViewById(R.id.rvRomance);
         rvRomance.setAdapter(new CoverSquareAdapter(
-                db.getWritingItemsByTag("romance", 12),
-                this::openWritingDetail
-        ));
-
+                db.getWritingItemsByTag("romance", 12), this::openWritingDetail));
         RecyclerView rvDrama = findViewById(R.id.rvDrama);
         rvDrama.setAdapter(new CoverSquareAdapter(
-                db.getWritingItemsByTag("drama", 12),
-                this::openWritingDetail
-        ));
-
+                db.getWritingItemsByTag("drama", 12), this::openWritingDetail));
         RecyclerView rvComedy = findViewById(R.id.rvComedy);
         rvComedy.setAdapter(new CoverSquareAdapter(
-                db.getWritingItemsByTag("comedy", 12),
-                this::openWritingDetail
-        ));
-
+                db.getWritingItemsByTag("comedy", 12), this::openWritingDetail));
         RecyclerView rvFantasy = findViewById(R.id.rvFantasy);
         rvFantasy.setAdapter(new CoverSquareAdapter(
-                db.getWritingItemsByTag("fantasy", 12),
-                this::openWritingDetail
-        ));
-
+                db.getWritingItemsByTag("fantasy", 12), this::openWritingDetail));
         RecyclerView rvScifi = findViewById(R.id.rvScifi);
         rvScifi.setAdapter(new CoverSquareAdapter(
-                db.getWritingItemsByTag("sci-fi", 12),
-                this::openWritingDetail
-        ));
-
+                db.getWritingItemsByTag("sci-fi", 12), this::openWritingDetail));
         RecyclerView rvMystery = findViewById(R.id.rvMystery);
         rvMystery.setAdapter(new CoverSquareAdapter(
-                db.getWritingItemsByTag("mystery", 12),
-                this::openWritingDetail
-        ));
+                db.getWritingItemsByTag("mystery", 12), this::openWritingDetail));
+
+        // ===== โหลด Banner ครั้งแรก =====
+        loadBanners();
     }
 
-    /** ✅ register receiver + รีเฟรชทันทีเมื่อหน้า Home กลับมา active */
+    /** โหลด/รีเฟรชแบนเนอร์ */
+    private void loadBanners() {
+        if (bannerPager == null) return;
+        List<DBHelper.Banner> banners = db.getActiveBanners(); // ใช้เมธอดที่คุณมีจริง
+        if (banners != null && !banners.isEmpty()) {
+            bannerPager.setAdapter(new BannerPagerAdapter(this, banners));
+            if (bannerPlaceholder != null) bannerPlaceholder.setVisibility(View.GONE);
+        } else {
+            if (bannerPlaceholder != null) bannerPlaceholder.setVisibility(View.VISIBLE);
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -220,22 +213,27 @@ public class HomeActivity extends AppCompatActivity {
                 writingChangedReceiver,
                 new IntentFilter(EventCenter.ACTION_WRITING_CHANGED)
         );
-        // สำคัญที่สุด: กลับจาก ReadMain ให้โหลดอันดับล่าสุดเลย
         refreshTop3();
+        loadProfileAvatar();
     }
 
-    /** unregister receiver */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // เผื่อเพิ่ม/ลบ banner จากหน้าแอดมิน กลับมาหน้านี้จะรีเฟรชให้
+        loadBanners();
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(writingChangedReceiver);
     }
 
-    // ---------- refresh helpers ----------
+    // ---------- helpers ----------
     private void refreshTop3() {
         if (topChartAdapter == null) return;
-        DBHelper db = new DBHelper(this);
-        topChartAdapter.replaceData(db.getTopWritingsByLikes(3));
+        topChartAdapter.replaceData(new DBHelper(this).getTopWritingsByLikes(3));
     }
 
     private void setSectionText(int includeId, String title) {
@@ -274,5 +272,23 @@ public class HomeActivity extends AppCompatActivity {
         Intent i = new Intent(this, CategoryListActivity.class);
         i.putExtra(CategoryListActivity.EXTRA_CATEGORY, category);
         startActivity(i);
+    }
+
+    private void loadProfileAvatar() {
+        ImageView avatar = ivProfile;
+        if (avatar == null) return;
+
+        String email = db.getLoggedInUserEmail();
+        if (email == null || email.trim().isEmpty()) {
+            email = getSharedPreferences("auth", MODE_PRIVATE).getString("email", null);
+        }
+        String uriStr = (email != null) ? db.getUserImageUri(email) : null;
+
+        if (uriStr != null && !uriStr.trim().isEmpty()) {
+            try { avatar.setImageURI(Uri.parse(uriStr)); }
+            catch (Exception e) { avatar.setImageResource(R.drawable.user_circle_svgrepo_com); }
+        } else {
+            avatar.setImageResource(R.drawable.user_circle_svgrepo_com);
+        }
     }
 }

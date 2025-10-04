@@ -2,9 +2,11 @@ package com.example.storysphere_appbar;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,9 +18,12 @@ public class activity_edit_profile extends AppCompatActivity {
 
     private EditText etUsername, etOldPassword, etNewPassword;
     private TextView tvEmail;
-    private View btnSave; // ปุ่มเซฟ (ถ้าใน layout ชื่ออื่นให้เปลี่ยน id ตรง findViewById)
+    private View btnSave;
     private DBHelper dbHelper;
     private String userEmail;
+
+    private static final int REQ_PICK_IMAGE = 2001;
+    private ImageView imgProfileEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +35,17 @@ public class activity_edit_profile extends AppCompatActivity {
         etOldPassword = findViewById(R.id.et_old_password);
         etNewPassword = findViewById(R.id.et_new_password);
         tvEmail       = findViewById(R.id.tv_email);
-        //btnSave       = findViewById(R.id.btn_save); // <-- ถ้า layout ไม่มี id นี้ ให้ใส่ id ให้ปุ่มเซฟ
 
         userEmail = getIntent().getStringExtra("email");
+
+        // ⭐ ตรงกับ XML: @id/img_profile  (เดิมคุณใช้ img_profile_edit แล้วหาไม่เจอ)
+        imgProfileEdit  = findViewById(R.id.img_profile);
+
+        // ⭐ ตรงกับ XML: @id/tv_change_picture (มี onClick ใน XML ด้วย)
+        TextView tvChangePicture = findViewById(R.id.tv_change_picture);
+        View.OnClickListener pickListener = v -> openSystemPicker();
+        imgProfileEdit.setOnClickListener(pickListener);
+        if (tvChangePicture != null) tvChangePicture.setOnClickListener(pickListener);
 
         // Toolbar back
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
@@ -51,9 +64,9 @@ public class activity_edit_profile extends AppCompatActivity {
             etUsername.setText("Guest User");
             etOldPassword.setEnabled(false);
             etNewPassword.setEnabled(false);
-            if (btnSave != null) { btnSave.setEnabled(false); btnSave.setAlpha(0.5f); }
+            // ถ้ามีปุ่ม save ให้ disable ตรงนี้
             Toast.makeText(this, "Test mode (no email) — fields are mocked", Toast.LENGTH_SHORT).show();
-            return; // ไม่ query DB
+            return;
         }
 
         // ----- NORMAL MODE: มี email -----
@@ -63,6 +76,15 @@ public class activity_edit_profile extends AppCompatActivity {
             cursor = dbHelper.getUserByEmail(userEmail);
             if (cursor != null && cursor.moveToFirst()) {
                 etUsername.setText(cursor.getString(cursor.getColumnIndexOrThrow("username")));
+
+                // ⭐ โหลดรูปโปรไฟล์จากคอลัมน์ image_uri (ยังอยู่ภายใน try ก่อน close)
+                int idx = cursor.getColumnIndex("image_uri");
+                if (idx != -1) {
+                    String uriStr = cursor.getString(idx);
+                    if (uriStr != null && !uriStr.isEmpty()) {
+                        imgProfileEdit.setImageURI(Uri.parse(uriStr));
+                    }
+                }
             } else {
                 Toast.makeText(this, "User not found in database", Toast.LENGTH_SHORT).show();
             }
@@ -71,8 +93,37 @@ public class activity_edit_profile extends AppCompatActivity {
         }
     }
 
+    // ⭐ เปิด Photo Picker (ไม่ต้องขอ permission เพิ่ม)
+    private void openSystemPicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        startActivityForResult(intent, REQ_PICK_IMAGE);
+    }
+
+    // ⭐ รับรูป → persist permission → แสดงรูป → บันทึกลง DB (image_uri)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                final int takeFlags = data.getFlags()
+                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                try { getContentResolver().takePersistableUriPermission(uri, takeFlags); } catch (Exception ignore) {}
+
+                imgProfileEdit.setImageURI(uri);
+
+                if (userEmail != null && !userEmail.isEmpty()) {
+                    // ใช้เมธอด updateUser(email, username?, password?, imageUri) ที่คุณมีอยู่แล้ว
+                    boolean ok = dbHelper.updateUser(userEmail, null, null, uri.toString());
+                    Toast.makeText(this, ok ? "อัปเดตรูปโปรไฟล์แล้ว" : "บันทึกรูปล้มเหลว", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
     public void save_change(View view) {
-        // กัน test mode
         if (userEmail == null || userEmail.isEmpty()) {
             Toast.makeText(this, "Test mode: saving is disabled", Toast.LENGTH_SHORT).show();
             return;
@@ -104,7 +155,7 @@ public class activity_edit_profile extends AppCompatActivity {
             if (cursor != null) cursor.close();
         }
 
-        boolean updated = dbHelper.updateUser(userEmail, username, newPassword);
+        boolean updated = dbHelper.updateUser(userEmail, username, newPassword); // image_uri ไม่เปลี่ยนในปุ่มนี้
         if (updated) {
             Toast.makeText(this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, activity_profile.class);
@@ -116,7 +167,8 @@ public class activity_edit_profile extends AppCompatActivity {
         }
     }
 
+    // ⭐ XML ของคุณผูก onClick="onChangePictureClick" ไว้ → เรียก picker
     public void onChangePictureClick(View view) {
-        Toast.makeText(this, "Feature not implemented", Toast.LENGTH_SHORT).show();
+        openSystemPicker();
     }
 }

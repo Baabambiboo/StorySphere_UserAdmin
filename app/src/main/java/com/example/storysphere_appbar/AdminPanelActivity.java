@@ -58,5 +58,11 @@ public class AdminPanelActivity extends AppCompatActivity {
                         startActivity(new Intent(this, UserListActivity.class))
                 // หรือ UsersListActivity.class แล้วแต่โปรเจกต์คุณใช้ชื่อไหน
         );
+        CardView cardBanner = findViewById(R.id.cardBanner);
+        cardBanner.setOnClickListener(v ->
+                startActivity(new Intent(AdminPanelActivity.this, AdminBannerActivity.class))
+        );
+
     }
+
 }

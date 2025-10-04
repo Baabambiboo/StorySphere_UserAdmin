@@ -216,6 +216,7 @@ public class ReadingMainActivity extends AppCompatActivity {
     }
 
     private void setupSocialBar(int writingId) {
+        // <<< ประกาศ view ให้ครบ >>>
         ImageView ivBookmark = findViewById(R.id.ivBookmark);
         TextView  tvBookmark = findViewById(R.id.tvBookmark);
         ImageView ivHeart    = findViewById(R.id.ivHeart);
@@ -225,13 +226,13 @@ public class ReadingMainActivity extends AppCompatActivity {
         final String logged = db.getLoggedInUserEmail();
         final String userEmail = (logged == null || logged.trim().isEmpty()) ? "guest" : logged.trim();
 
+        // ----- BOOKMARK -----
         int bCount = Math.max(0, db.countBookmarks(writingId));
         if (tvBookmark != null) tvBookmark.setText(String.valueOf(bCount));
         boolean isBookmarked = db.isBookmarked(userEmail, writingId);
         if (ivBookmark != null) {
             ivBookmark.setImageResource(isBookmarked ? R.drawable.ic_bookmark_filled
                     : R.drawable.ic_bookmark_outline);
-
             ivBookmark.setOnClickListener(v -> {
                 boolean now = db.isBookmarked(userEmail, writingId);
                 boolean ok  = db.setBookmark(userEmail, writingId, !now);
@@ -241,23 +242,35 @@ public class ReadingMainActivity extends AppCompatActivity {
                     ivBookmark.setImageResource(!now ? R.drawable.ic_bookmark_filled
                             : R.drawable.ic_bookmark_outline);
                     statsTouched = true;
-                    broadcastChange(); // <<< แจ้งเปลี่ยนบุ๊กมาร์ก
+                    broadcastChange();
                 }
             });
         }
 
+        // ----- LIKE (บันทึกต่อผู้ใช้) -----
         if (ivHeart != null && tvHeart != null) {
             int likes = Math.max(0, db.getLikes(writingId));
             tvHeart.setText(String.valueOf(likes));
-            ivHeart.setImageResource(R.drawable.heart_svgrepo_com);
+
+            boolean liked = db.isUserLiked(userEmail, writingId);
+            ivHeart.setImageResource(liked ? R.drawable.ic_heart_filled
+                    : R.drawable.heart_svgrepo_com);
+
             ivHeart.setOnClickListener(v -> {
-                int newLikes = Math.max(0, db.addLikeOnce(writingId));
-                tvHeart.setText(String.valueOf(newLikes));
-                ivHeart.setImageResource(R.drawable.ic_heart_filled);
-                statsTouched = true;
-                broadcastChange(); // <<< แจ้งเปลี่ยนไลก์
+                boolean nowLiked = db.isUserLiked(userEmail, writingId);
+                // toggle แล้วอัปเดตทั้ง LOG และ COUNTER
+                boolean ok = db.setUserLike(userEmail, writingId, !nowLiked);
+                if (ok) {
+                    int newLikes = Math.max(0, db.getLikes(writingId));
+                    tvHeart.setText(String.valueOf(newLikes));
+                    ivHeart.setImageResource(!nowLiked ? R.drawable.ic_heart_filled
+                            : R.drawable.heart_svgrepo_com);
+                    statsTouched = true;
+                    broadcastChange();
+                }
             });
         }
+
 
         if (tvEye != null) {
             tvEye.setText(String.valueOf(Math.max(0, db.getViews(writingId))));

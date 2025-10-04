@@ -36,21 +36,23 @@ public class Writing_Add_Episode1 extends AppCompatActivity {
     private TextView uploadImageText;
 
     private DBHelper dbHelper;
-    private String ImagePath = ""; // เก็บเป็น "URI string" ของรูป
+    // เก็บเป็น "URI string" ของภาพ (content://...) เพื่อความเข้ากันได้ทุกเวอร์ชัน
+    private String imagePath = "";
 
-    // เปิดตัวเลือกไฟล์แบบ SAF (ปลอดภัย/เสถียร Android 10–15)
+    // SAF: เปิดไฟล์รูปแบบปลอดภัย (Android 10+ ดีสุด)
     private final ActivityResultLauncher<String[]> pickImage =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri == null) return;
 
-                // persist read permission
+                // ขอสิทธิ์อ่านแบบถาวร (persist) เพื่อให้เปิดรูปได้แม้รีสตาร์ทแอป
                 try {
                     getContentResolver().takePersistableUriPermission(
-                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    );
                 } catch (SecurityException ignore) {}
 
                 imageViewUpload.setImageURI(uri);
-                ImagePath = uri.toString();
+                imagePath = uri.toString();
                 Toast.makeText(this, "เลือกรูปแล้ว", Toast.LENGTH_SHORT).show();
             });
 
@@ -59,38 +61,44 @@ public class Writing_Add_Episode1 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_writing_add_episode1);
 
+        // Toolbar back
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> {
             startActivity(new Intent(this, activity_writing.class));
             finish();
         });
 
+        // Bind views
         edtTitle = findViewById(R.id.edtAddTitle);
         edtTagline = findViewById(R.id.edtAddTagline);
         edtTag = findViewById(R.id.edtAddTag);
         spinnerCategory = findViewById(R.id.spinner_custom);
         bttCreate = findViewById(R.id.bttCreate);
         imageViewUpload = findViewById(R.id.imageView4);
-        uploadImageText = findViewById(R.id.UplodeImage);
+        uploadImageText = findViewById(R.id.UplodeImage); // มีใน layout ของคุณอยู่แล้ว
 
         dbHelper = new DBHelper(this);
 
+        // Spinner
         List<String> categories = Arrays.asList("Fantasy", "Romance", "Sci-fi", "Drama","Comedy","Mystery");
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, categories);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapter);
 
-        // เลือกรูป: Android 13+ ไม่ต้องขอ permission; Android 12- ขอ READ_EXTERNAL_STORAGE ก่อน
+        // เปิดตัวเลือกภาพ: รองรับทั้งคลิกรูปและคลิกข้อความ
         imageViewUpload.setOnClickListener(v -> openImagePickerSafely());
-        uploadImageText.setOnClickListener(v -> openImagePickerSafely());
+        if (uploadImageText != null) {
+            uploadImageText.setOnClickListener(v -> openImagePickerSafely());
+        }
 
+        // Create
         bttCreate.setOnClickListener(v -> {
             String title = edtTitle.getText().toString().trim();
             String tagline = edtTagline.getText().toString().trim();
             String tag = edtTag.getText().toString().trim();
             String category = spinnerCategory.getSelectedItem().toString();
-            String content = "";
+            String content = ""; // ยังไม่ใช้
 
             if (title.isEmpty()) {
                 edtTitle.setError("กรุณากรอกหัวข้อ");
@@ -98,8 +106,7 @@ public class Writing_Add_Episode1 extends AppCompatActivity {
                 return;
             }
 
-            long id = dbHelper.insertWriting(title, tagline, tag, category, ImagePath, content);
-
+            long id = dbHelper.insertWriting(title, tagline, tag, category, imagePath, content);
             if (id > 0) {
                 Toast.makeText(this, "สร้างงานเขียนใหม่สำเร็จ", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, activity_writing.class));
@@ -112,7 +119,7 @@ public class Writing_Add_Episode1 extends AppCompatActivity {
 
     private void openImagePickerSafely() {
         if (Build.VERSION.SDK_INT >= 33) {
-            // Android 13+ ใช้ SAF ได้เลย (ไม่ต้องขอ permission)
+            // Android 13+ ใช้ SAF เลย ไม่ต้องขอ permission
             pickImage.launch(new String[]{"image/*"});
         } else {
             // Android 12- ต้องมี READ_EXTERNAL_STORAGE ก่อน

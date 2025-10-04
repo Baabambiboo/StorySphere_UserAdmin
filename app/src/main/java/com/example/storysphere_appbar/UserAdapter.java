@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,4 +104,122 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.VH> {
             txtUserStatus      = v.findViewById(R.id.txtUserStatus);
         }
     }
+    // =============== NEW METHODS (ADD-ONLY) ===============
+
+    /** รีเซ็ตตัวกรอง: แสดงข้อมูลทั้งหมด */
+    public void resetFilter() {
+        data.clear();
+        data.addAll(full);
+        notifyDataSetChanged();
+    }
+
+    /**
+     * ใช้กับ Spinner: กรองแบบ "ตรงตัว" (exact) ตาม username / email / displayName / code
+     * - ถ้าเป็น "All users" หรือค่าว่าง -> รีเซ็ตตัวกรอง
+     * - ถ้าไม่เจอแบบ exact เลย จะ fallback ไปใช้ filter แบบ contains()
+     */
+    public void filterBySpinnerSelection(@Nullable String display) {
+        if (display == null) {
+            resetFilter();
+            return;
+        }
+        String d = display.trim();
+        if (d.isEmpty() || "All users".equalsIgnoreCase(d)) {
+            resetFilter();
+            return;
+        }
+
+        List<User> exact = new ArrayList<>();
+        for (User u : full) {
+            String username = u.username     != null ? u.username : "";
+            String email    = u.email        != null ? u.email    : "";
+            String show     = u.displayName  != null ? u.displayName : "";
+            String code     = u.code         != null ? u.code     : "";
+
+            if (d.equalsIgnoreCase(username)
+                    || d.equalsIgnoreCase(email)
+                    || d.equalsIgnoreCase(show)
+                    || d.equalsIgnoreCase(code)) {
+                exact.add(u);
+            }
+        }
+
+        if (!exact.isEmpty()) {
+            data.clear();
+            data.addAll(exact);
+            notifyDataSetChanged();
+        } else {
+            // ถ้า exact ไม่เจอเลย ให้ fallback เป็นการค้นหาแบบ contains
+            filter(d);
+        }
+    }
+
+    /** กรองแบบเจาะจง userId (strict) — ใช้เวลารู้ id แน่ชัด */
+    public void filterByUserIdStrict(@NonNull Integer userId) {
+        data.clear();
+        for (User u : full) {
+            if (u.id != null && u.id.equals(userId)) {
+                data.add(u);
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+    /** กรองแบบเจาะจง email (exact) */
+    public void filterByEmailExact(@Nullable String email) {
+        if (email == null || email.trim().isEmpty()) {
+            resetFilter();
+            return;
+        }
+        String e = email.trim();
+        data.clear();
+        for (User u : full) {
+            if (u.email != null && u.email.equalsIgnoreCase(e)) {
+                data.add(u);
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+    /** กรองโดย "คำ" หลายคำ (อย่างน้อย 1 คำตรง) แบบ contains/ไม่สนตัวพิมพ์ */
+    public void filterContainsAny(@NonNull String... tokens) {
+        if (tokens.length == 0) {
+            resetFilter();
+            return;
+        }
+        List<String> ks = new ArrayList<>();
+        for (String t : tokens) {
+            if (t != null && !t.trim().isEmpty()) ks.add(t.trim().toLowerCase());
+        }
+        if (ks.isEmpty()) {
+            resetFilter();
+            return;
+        }
+
+        data.clear();
+        for (User u : full) {
+            String username = u.username    != null ? u.username.toLowerCase()    : "";
+            String display  = u.displayName != null ? u.displayName.toLowerCase() : "";
+            String email    = u.email       != null ? u.email.toLowerCase()       : "";
+            String code     = u.code        != null ? u.code.toLowerCase()        : "";
+
+            boolean match = false;
+            for (String k : ks) {
+                if (username.contains(k) || display.contains(k) || email.contains(k) || code.contains(k)) {
+                    match = true; break;
+                }
+            }
+            if (match) data.add(u);
+        }
+        notifyDataSetChanged();
+    }
+
+    /** คืน snapshot ของรายการที่กำลังแสดง (ไว้ debug/ใช้ต่อ) */
+    @NonNull
+    public List<User> getCurrentItems() {
+        return new ArrayList<>(data);
+    }
+
+
+
 }

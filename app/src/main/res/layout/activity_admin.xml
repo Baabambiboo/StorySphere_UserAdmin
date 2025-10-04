@@ -55,6 +55,65 @@
             android:textSize="30sp" />
     </androidx.cardview.widget.CardView>
 
+    <!-- ▼ การ์ด Banner ใหม่ -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardBanner"
+        android:layout_width="333dp"
+        android:layout_height="131dp"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="10dp"
+        android:foreground="?attr/selectableItemBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- วงกลมไอคอน -->
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/circle_background">
+
+                <ImageView
+                    android:id="@+id/imgBannerIcon"
+                    android:layout_width="70dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_image" />
+                <!-- ใช้ไอคอนที่มีในโปรเจกต์; ถ้ามี ic_banner ก็เปลี่ยนได้ -->
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvBannerTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|top"
+                android:layout_marginStart="140dp"
+                android:layout_marginTop="24dp"
+                android:text="Banner"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvBannerSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|top"
+                android:layout_marginStart="140dp"
+                android:layout_marginTop="58dp"
+                android:text="Manage home banners"
+                android:textColor="#6B6B6B"
+                android:textSize="14sp" />
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
+    <!-- ▲ การ์ด Banner ใหม่ -->
+
     <ImageView
         android:id="@+id/imgHome"
         android:layout_width="35dp"
@@ -177,5 +236,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView2" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
 
+</androidx.constraintlayout.widget.ConstraintLayout>

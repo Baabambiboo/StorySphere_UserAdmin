@@ -221,13 +221,29 @@ public class Writing_Add_Episode3 extends AppCompatActivity {
 
         // Like
         if (ivHeart != null && tvHeart != null) {
+            // ค่าเริ่มต้น
             int likes = Math.max(0, dbHelper.getLikes(writingId));
             tvHeart.setText(String.valueOf(likes));
-            ivHeart.setImageResource(R.drawable.heart_svgrepo_com);
+
+            boolean liked = dbHelper.isUserLiked(userEmail, writingId);
+            ivHeart.setImageResource(liked ? R.drawable.ic_heart_filled
+                    : R.drawable.heart_svgrepo_com);
+
             ivHeart.setOnClickListener(v -> {
-                int newLikes = Math.max(0, dbHelper.addLikeOnce(writingId));
-                tvHeart.setText(String.valueOf(newLikes));
-                ivHeart.setImageResource(R.drawable.ic_heart_filled);
+                boolean nowLiked = dbHelper.isUserLiked(userEmail, writingId);
+                boolean ok = dbHelper.setUserLike(userEmail, writingId, !nowLiked);
+                if (ok) {
+                    int newLikes = Math.max(0, dbHelper.getLikes(writingId));
+                    tvHeart.setText(String.valueOf(newLikes));
+                    ivHeart.setImageResource(!nowLiked ? R.drawable.ic_heart_filled
+                            : R.drawable.heart_svgrepo_com);
+
+                    // แจ้งหน้าอื่นให้รีเฟรช (Home/Reading page ฯลฯ)
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(
+                            new Intent(ReadingMainActivity.ACTION_WRITING_CHANGED)
+                                    .putExtra(ReadingMainActivity.EXTRA_WRITING_ID, writingId)
+                    );
+                }
             });
         }
 

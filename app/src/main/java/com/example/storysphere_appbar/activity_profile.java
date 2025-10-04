@@ -78,6 +78,16 @@ public class activity_profile extends AppCompatActivity {
             }
         }
         tvUsername.setText(username);
+        // โหลดรูปโปรไฟล์จาก DB (คอลัมน์ image_uri)
+        String uriStr = dbHelper.getUserImageUri(userEmail);
+        if (uriStr != null && !uriStr.isEmpty()) {
+            try { imgProfile.setImageURI(android.net.Uri.parse(uriStr)); }
+            catch (Exception e) {
+                imgProfile.setImageResource(R.drawable.ic_launcher_foreground); // fallback
+            }
+        } else {
+            imgProfile.setImageResource(R.drawable.ic_launcher_foreground);
+        }
     }
 
     public void edit_profile(View view) {
