@@ -7,10 +7,10 @@
     android:layout_height="match_parent"
     android:background="#F6F6F6"
     android:fitsSystemWindows="true"
-    tools:context=".AdminPanelActivity">
+    tools:context=".Admin">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardView"
+        android:id="@+id/cardView3"
         android:layout_width="333dp"
         android:layout_height="131dp"
         android:layout_margin="16dp"
@@ -28,7 +28,7 @@
             android:background="@drawable/circle_background">
 
             <ImageView
-                android:id="@+id/imageView"
+                android:id="@+id/imageView10"
                 android:layout_width="70dp"
                 android:layout_height="60dp"
                 android:layout_marginLeft="14dp"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="150dp"
             android:layout_marginTop="50dp"
-            android:text="0"
+            android:text="1"
             android:textSize="30sp" />
     </androidx.cardview.widget.CardView>
 
@@ -75,7 +75,7 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_bell_addmin" />
+        app:srcCompat="@drawable/ic_bell_admin" />
 
     <TextView
         android:id="@+id/textView8"
@@ -149,7 +149,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="150dp"
             android:layout_marginTop="50dp"
-            android:text="0"
+            android:text="1"
             android:textSize="30sp" />
     </androidx.cardview.widget.CardView>
 
@@ -177,5 +177,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView2" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageView
+        android:id="@+id/imgUploadBanner"
+        android:layout_width="346dp"
+        android:layout_height="193dp"
+        android:layout_marginTop="84dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.493"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView3"
+        app:srcCompat="@drawable/divider_line" />
 
+    <TextView
+        android:id="@+id/textView17"
+        android:layout_width="181dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="320dp"
+        android:text="Upload Image Banner"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.06"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView3" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
