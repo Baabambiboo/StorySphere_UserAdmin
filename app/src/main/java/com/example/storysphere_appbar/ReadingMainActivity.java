@@ -216,15 +216,18 @@ public class ReadingMainActivity extends AppCompatActivity {
     }
 
     private void setupSocialBar(int writingId) {
-        // <<< ประกาศ view ให้ครบ >>>
         ImageView ivBookmark = findViewById(R.id.ivBookmark);
         TextView  tvBookmark = findViewById(R.id.tvBookmark);
         ImageView ivHeart    = findViewById(R.id.ivHeart);
         TextView  tvHeart    = findViewById(R.id.tvHeart);
         TextView  tvEye      = findViewById(R.id.tvEye);
 
-        final String logged = db.getLoggedInUserEmail();
-        final String userEmail = (logged == null || logged.trim().isEmpty()) ? "guest" : logged.trim();
+        // ✅ ดึงอีเมลแบบ 3 ชั้น: SharedPrefs -> DB session -> guest
+        String prefEmail = getSharedPreferences("auth", MODE_PRIVATE).getString("email", null);
+        String sessEmail = db.getLoggedInUserEmail();
+        final String userEmail = (prefEmail != null && !prefEmail.trim().isEmpty())
+                ? prefEmail.trim()
+                : (sessEmail != null && !sessEmail.trim().isEmpty() ? sessEmail.trim() : "guest");
 
         // ----- BOOKMARK -----
         int bCount = Math.max(0, db.countBookmarks(writingId));
@@ -247,7 +250,7 @@ public class ReadingMainActivity extends AppCompatActivity {
             });
         }
 
-        // ----- LIKE (บันทึกต่อผู้ใช้) -----
+        // ----- LIKE -----
         if (ivHeart != null && tvHeart != null) {
             int likes = Math.max(0, db.getLikes(writingId));
             tvHeart.setText(String.valueOf(likes));
@@ -258,7 +261,6 @@ public class ReadingMainActivity extends AppCompatActivity {
 
             ivHeart.setOnClickListener(v -> {
                 boolean nowLiked = db.isUserLiked(userEmail, writingId);
-                // toggle แล้วอัปเดตทั้ง LOG และ COUNTER
                 boolean ok = db.setUserLike(userEmail, writingId, !nowLiked);
                 if (ok) {
                     int newLikes = Math.max(0, db.getLikes(writingId));
@@ -270,7 +272,6 @@ public class ReadingMainActivity extends AppCompatActivity {
                 }
             });
         }
-
 
         if (tvEye != null) {
             tvEye.setText(String.valueOf(Math.max(0, db.getViews(writingId))));

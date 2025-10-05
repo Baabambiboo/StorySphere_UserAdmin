@@ -113,7 +113,7 @@ public class activity_writing extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        Intent intent = new Intent(this, MainActivity.class); // ถ้าอยากกลับไปหน้า Login/หลัก
+        Intent intent = new Intent(this, HomeActivity.class); // ถ้าอยากกลับไปหน้า Login/หลัก
         startActivity(intent);
         finish(); // ปิดหน้านี้ไม่ให้ย้อนกลับมาได้
         return true;

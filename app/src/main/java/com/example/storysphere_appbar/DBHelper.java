@@ -35,7 +35,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
 
-    private static final int DATABASE_VERSION = 23;
+    private static final int DATABASE_VERSION = 24;
 
     public DBHelper(Context context) { super(context, DATABASE_NAME, null, DATABASE_VERSION); }
 
@@ -134,9 +134,11 @@ public class DBHelper extends SQLiteOpenHelper {
                     "created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))" +
                     ")");
 
+
             db.setTransactionSuccessful();
         } finally { db.endTransaction(); }
     }
+
 
     // ======================== UPGRADE ========================
     @Override
@@ -1555,24 +1557,6 @@ public class DBHelper extends SQLiteOpenHelper {
         public boolean active;
     }
 
-    public List<Banner> getAllBanners() {
-        List<Banner> list = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery("SELECT * FROM banners WHERE active = 1", null);
 
-        if (c.moveToFirst()) {
-            do {
-                Banner b = new Banner();
-                b.id = c.getInt(c.getColumnIndexOrThrow("id"));
-                b.imagePath = c.getString(c.getColumnIndexOrThrow("image_path"));
-                b.title = c.getString(c.getColumnIndexOrThrow("title"));
-                b.deeplink = c.getString(c.getColumnIndexOrThrow("deeplink"));
-                b.active = c.getInt(c.getColumnIndexOrThrow("active")) == 1;
-                list.add(b);
-            } while (c.moveToNext());
-        }
-        c.close();
-        return list;
-    }
 
 }

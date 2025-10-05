@@ -213,6 +213,12 @@ public class HomeActivity extends AppCompatActivity {
                 writingChangedReceiver,
                 new IntentFilter(EventCenter.ACTION_WRITING_CHANGED)
         );
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                bannerChangedReceiver,
+                new IntentFilter("ACTION_RELOAD_BANNERS")
+        );
+
         refreshTop3();
         loadProfileAvatar();
     }
@@ -228,7 +234,17 @@ public class HomeActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(writingChangedReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(bannerChangedReceiver);
     }
+
+    private final android.content.BroadcastReceiver bannerChangedReceiver =
+            new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(android.content.Context context, Intent intent) {
+                    loadBanners(); // โหลดแบนเนอร์ใหม่
+                    android.widget.Toast.makeText(context, "อัปเดตแบนเนอร์แล้ว", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            };
 
     // ---------- helpers ----------
     private void refreshTop3() {
